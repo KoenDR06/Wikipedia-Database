@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 
 val dotEnv = dotenv()
 lateinit var articleService: ArticleService
+lateinit var linkService: LinkService
 
 fun main() {
     // Setting up DataBase
@@ -17,11 +18,14 @@ fun main() {
         driver = "org.mariadb.jdbc.Driver"
     )
     articleService = ArticleService(database)
+    linkService = LinkService(database)
 
     // Going through Wikipedia data
     val f = File("/home/horseman/Programming/simplewiki-20230820-pages-articles-multistream.xml")
 //    val f = File("src/main/resources/test-data.xml")
     val reader = f.bufferedReader()
+
+    var count = 0
 
     var inText = false
     var title = ""
@@ -45,6 +49,8 @@ fun main() {
         if (line.contains("</text>")) {
             inText = false
             title = ""
+            count++
+            count.println()
         }
     }
 }
@@ -71,8 +77,19 @@ fun processLine(line: String): List<String> {
 }
 
 fun putInDatabase(title: String, link: String) {
-//    "$title, $link".println()
     runBlocking {
-//        articleService.create(Article(title))
+        var articleID = articleService.read(title)
+        if (articleID == null) {
+            articleID = articleService.create(Article(title))
+        }
+
+        var linkedID = articleService.read(link)
+        if (linkedID == null) {
+            linkedID = articleService.create(Article(link))
+        }
+
+        if (linkService.read(articleID, linkedID).isEmpty()) {
+            linkService.create(Link(articleID, linkedID))
+        }
     }
 }
