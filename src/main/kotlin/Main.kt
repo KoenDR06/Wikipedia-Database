@@ -3,7 +3,7 @@ package me.koendev
 import java.io.File
 import org.jetbrains.exposed.sql.Database
 import io.github.cdimascio.dotenv.dotenv
-import kotlinx.coroutines.runBlocking
+import me.koendev.database.*
 
 val dotEnv = dotenv()
 lateinit var articleService: ArticleService
@@ -77,19 +77,17 @@ fun processLine(line: String): List<String> {
 }
 
 fun putInDatabase(title: String, link: String) {
-    runBlocking {
-        var articleID = articleService.read(title)
-        if (articleID == null) {
-            articleID = articleService.create(Article(title))
-        }
+    var articleID = articleService.read(title)
+    if (articleID == null) {
+        articleID = articleService.create(Article(title))
+    }
 
-        var linkedID = articleService.read(link)
-        if (linkedID == null) {
-            linkedID = articleService.create(Article(link))
-        }
+    var linkedID = articleService.read(link)
+    if (linkedID == null) {
+        linkedID = articleService.create(Article(link))
+    }
 
-        if (linkService.read(articleID, linkedID).isEmpty()) {
-            linkService.create(Link(articleID, linkedID))
-        }
+    if (linkService.read(articleID, linkedID) == null) {
+        linkService.create(Link(articleID, linkedID))
     }
 }
