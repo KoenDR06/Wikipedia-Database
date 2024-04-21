@@ -19,7 +19,7 @@ class LinkItem(id: EntityID<Int>): IntEntity(id) {
     var toID by LinkService.Links.toID
 }
 
-class LinkService(database: Database) {
+class LinkService(private val database: Database) {
     object Links : IntIdTable() {
         val fromID = integer("from_id")
         val toID = integer("to_id")
@@ -33,7 +33,7 @@ class LinkService(database: Database) {
 
     fun create(link: Link): Int {
         var id: Int? = null
-        transaction {
+        transaction(database) {
             id = LinkItem.new {
                 fromID = link.from
                 toID = link.to
@@ -44,7 +44,7 @@ class LinkService(database: Database) {
 
     fun read(from: Int, to: Int): Int? {
         var id: Int? = null
-        transaction {
+        transaction(database) {
             id = Links.select {
                 (Links.fromID eq from) and (Links.toID eq to)
             }.map {

@@ -1,13 +1,21 @@
 package me.koendev
 
-import java.io.File
-import org.jetbrains.exposed.sql.Database
 import io.github.cdimascio.dotenv.dotenv
-import me.koendev.database.*
+import me.koendev.database.Article
+import me.koendev.database.ArticleService
+import me.koendev.database.Link
+import me.koendev.database.LinkService
+import org.jetbrains.exposed.sql.Database
+import java.io.File
 
 val dotEnv = dotenv()
 lateinit var articleService: ArticleService
 lateinit var linkService: LinkService
+
+var lastTimeAdded = System.currentTimeMillis()
+var count = 0
+const val numberOfLinks = 8027607
+val startTimeMillis = System.currentTimeMillis()
 
 fun main() {
     // Setting up DataBase
@@ -20,8 +28,10 @@ fun main() {
     articleService = ArticleService(database)
     linkService = LinkService(database)
 
+    Thread.sleep(60000)
+
     // Going through Wikipedia data
-    val f = File("/home/horseman/Programming/simplewiki-20230820-pages-articles-multistream.xml")
+    val f = File("/home/horseman/Programming/simplewiki.xml")
 //    val f = File("src/main/resources/test-data.xml")
     val reader = f.bufferedReader()
 
@@ -43,14 +53,13 @@ fun main() {
             val links = processLine(line)
             for (link in links) {
                 putInDatabase(title, link)
+                predictETA()
             }
         }
 
         if (line.contains("</text>")) {
             inText = false
             title = ""
-            count++
-            count.println()
         }
     }
 }
@@ -68,7 +77,7 @@ fun processLine(line: String): List<String> {
     val splits = line.split("[[")
     for (i in 1..< splits.size) {
         val link = splits[i].split("]]")[0].split("|")[0].replace(" ", "_")
-        if (link.startsWith("wikt:")) {
+        if (link.startsWith("wikt:") || link.startsWith("File:")) {
             continue
         }
         res.add(link)
@@ -82,12 +91,24 @@ fun putInDatabase(title: String, link: String) {
         articleID = articleService.create(Article(title))
     }
 
-    var linkedID = articleService.read(link)
-    if (linkedID == null) {
-        linkedID = articleService.create(Article(link))
+    var linkID = articleService.read(link)
+    if (linkID == null) {
+        linkID = articleService.create(Article(link))
     }
 
-    if (linkService.read(articleID, linkedID) == null) {
-        linkService.create(Link(articleID, linkedID))
+    if (linkService.read(articleID, linkID) == null) {
+        linkService.create(Link(articleID, linkID))
+    }
+}
+
+fun predictETA() {
+    val currentTime = System.currentTimeMillis()
+    val linksToGo = numberOfLinks - ++count
+    val deltaTime = currentTime - lastTimeAdded
+
+    lastTimeAdded = currentTime
+
+    if(count % 1_000 == 0) {
+        println("Estimated time remaining: ${linksToGo * deltaTime} millis\tprocessed: $count / $numberOfLinks\truntime: ${currentTime - startTimeMillis} millis")
     }
 }

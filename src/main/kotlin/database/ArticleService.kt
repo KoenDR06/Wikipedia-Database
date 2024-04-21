@@ -17,7 +17,7 @@ class ArticleItem(id: EntityID<Int>): IntEntity(id) {
     var title by ArticleService.Articles.title
 }
 
-class ArticleService(database: Database) {
+class ArticleService(private val database: Database) {
     object Articles : IntIdTable() {
         val title = varchar("title", length = 256)
     }
@@ -30,7 +30,7 @@ class ArticleService(database: Database) {
 
     fun create(article: Article): Int {
         var id: Int? = null
-        transaction {
+        transaction(database) {
             id = ArticleItem.new {
                 title = article.title
             }.id.value
@@ -40,7 +40,7 @@ class ArticleService(database: Database) {
 
     fun read(title: String): Int? {
         var id: Int? = null
-        transaction {
+        transaction(database) {
             id = Articles.select {
                 Articles.title eq title
             }.map {
