@@ -1,11 +1,12 @@
 package me.koendev
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.dotenv
 import me.koendev.database.Article
 import me.koendev.database.ArticleService
 import me.koendev.database.Link
 import me.koendev.database.LinkService
-import org.jetbrains.exposed.sql.Database
 import java.io.File
 
 val dotEnv = dotenv()
@@ -19,23 +20,24 @@ val startTimeMillis = System.currentTimeMillis()
 
 fun main() {
     // Setting up DataBase
-    val database = Database.connect(
-        url = dotEnv["DB_URL"],
-        user = dotEnv["DB_USER"],
-        password = dotEnv["DB_PASSWORD"],
-        driver = "org.mariadb.jdbc.Driver"
-    )
-    articleService = ArticleService(database)
-    linkService = LinkService(database)
+    val config = HikariConfig()
+    config.jdbcUrl = dotEnv["DB_URL"]
+    config.username = dotEnv["DB_USER"]
+    config.password = dotEnv["DB_PASSWORD"]
+    config.driverClassName = "org.mariadb.jdbc.Driver"
+    config.maximumPoolSize = 10
+    config.connectionTimeout = 30000
+    config.idleTimeout = 600000
+    val datasource = HikariDataSource(config)
 
-    Thread.sleep(60000)
+
+    articleService = ArticleService(datasource)
+    linkService = LinkService(datasource)
 
     // Going through Wikipedia data
     val f = File("/home/horseman/Programming/simplewiki.xml")
 //    val f = File("src/main/resources/test-data.xml")
     val reader = f.bufferedReader()
-
-    var count = 0
 
     var inText = false
     var title = ""

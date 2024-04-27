@@ -1,5 +1,6 @@
 package me.koendev.database
 
+import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -17,20 +18,21 @@ class ArticleItem(id: EntityID<Int>): IntEntity(id) {
     var title by ArticleService.Articles.title
 }
 
-class ArticleService(private val database: Database) {
+class ArticleService(datasource: HikariDataSource) {
     object Articles : IntIdTable() {
         val title = varchar("title", length = 256)
     }
 
     init {
-        transaction(database) {
+        Database.connect(datasource)
+        transaction {
             SchemaUtils.createMissingTablesAndColumns(Articles)
         }
     }
 
     fun create(article: Article): Int {
         var id: Int? = null
-        transaction(database) {
+        transaction {
             id = ArticleItem.new {
                 title = article.title
             }.id.value
@@ -40,7 +42,7 @@ class ArticleService(private val database: Database) {
 
     fun read(title: String): Int? {
         var id: Int? = null
-        transaction(database) {
+        transaction {
             id = Articles.select {
                 Articles.title eq title
             }.map {

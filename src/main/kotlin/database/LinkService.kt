@@ -1,5 +1,6 @@
 package me.koendev.database
 
+import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -19,21 +20,22 @@ class LinkItem(id: EntityID<Int>): IntEntity(id) {
     var toID by LinkService.Links.toID
 }
 
-class LinkService(private val database: Database) {
+class LinkService(datasource: HikariDataSource) {
     object Links : IntIdTable() {
         val fromID = integer("from_id")
         val toID = integer("to_id")
     }
 
     init {
-        transaction(database) {
+        Database.connect(datasource)
+        transaction {
             SchemaUtils.createMissingTablesAndColumns(Links)
         }
     }
 
     fun create(link: Link): Int {
         var id: Int? = null
-        transaction(database) {
+        transaction {
             id = LinkItem.new {
                 fromID = link.from
                 toID = link.to
@@ -44,7 +46,7 @@ class LinkService(private val database: Database) {
 
     fun read(from: Int, to: Int): Int? {
         var id: Int? = null
-        transaction(database) {
+        transaction {
             id = Links.select {
                 (Links.fromID eq from) and (Links.toID eq to)
             }.map {

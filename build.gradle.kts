@@ -23,6 +23,7 @@ dependencies {
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
     implementation("io.ktor:ktor-client-serialization:2.3.7")
+    implementation("com.zaxxer:HikariCP:5.0.0")
 }
 
 tasks.test {
