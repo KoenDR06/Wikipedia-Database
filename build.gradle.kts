@@ -4,22 +4,26 @@ plugins {
 }
 
 group = "me.koendev"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 repositories {
     mavenCentral()
 }
 
-val ktor_version: String by project
-val kotlin_version: String by project
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes("Main-Class" to "me.koendev.MainKt")
+    }
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
 
-val exposed_version: String by project
-val h2_version: String by project
+val exposedVersion: String by project
 
 dependencies {
-    implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
     implementation("io.ktor:ktor-client-serialization:2.3.7")
@@ -29,6 +33,7 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
 }
