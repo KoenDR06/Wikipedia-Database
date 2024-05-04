@@ -35,8 +35,7 @@ fun main() {
     linkService = LinkService(datasource)
 
     // Going through Wikipedia data
-    val f = File("/home/horseman/Programming/simplewiki.xml")
-//    val f = File("src/main/resources/test-data.xml")
+    val f = File(dotEnv["DUMP_FILE"])
     val reader = f.bufferedReader()
 
     var inText = false
