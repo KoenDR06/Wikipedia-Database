@@ -8,6 +8,7 @@ import me.koendev.database.ArticleService
 import me.koendev.database.Link
 import me.koendev.database.LinkService
 import java.io.File
+import java.io.FileWriter
 
 val dotEnv = dotenv()
 lateinit var articleService: ArticleService
@@ -17,6 +18,9 @@ var lastTimeAdded = System.currentTimeMillis()
 var count = 0
 const val numberOfLinks = 8027607
 val startTimeMillis = System.currentTimeMillis()
+
+val txtFile = File("src/main/resources/data.txt")
+val writer = FileWriter(txtFile)
 
 fun main() {
     // Setting up DataBase
@@ -51,9 +55,9 @@ fun main() {
         }
 
         if (inText) {
-            val links = processLine(line)
+            val links = processLineFromXML(line)
             for (link in links) {
-                putInDatabase(title, link)
+                writeToFile(title, link)
                 predictETA()
             }
         }
@@ -65,7 +69,7 @@ fun main() {
     }
 }
 
-fun processLine(line: String): List<String> {
+fun processLineFromXML(line: String): List<String> {
     val res = mutableListOf<String>()
     var line = line
     if (line.startsWith("[[File:")) {
@@ -102,14 +106,15 @@ fun putInDatabase(title: String, link: String) {
     }
 }
 
-fun predictETA() {
-    val currentTime = System.currentTimeMillis()
-    val linksToGo = numberOfLinks - ++count
-    val deltaTime = currentTime - lastTimeAdded
+fun writeToFile(title: String, link: String) {
+    writer.write("$title, $link\n")
+}
 
-    lastTimeAdded = currentTime
+
+fun predictETA() {
+    val linksToGo = numberOfLinks - ++count
 
     if(count % 1_000 == 0) {
-        println("Estimated time remaining: ${linksToGo * deltaTime} millis\tprocessed: $count / $numberOfLinks\truntime: ${currentTime - startTimeMillis} millis")
+        println("processed: $count / $numberOfLinks\truntime: ${System.currentTimeMillis() - startTimeMillis} millis")
     }
 }
