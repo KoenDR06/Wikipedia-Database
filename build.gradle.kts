@@ -13,7 +13,7 @@ repositories {
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
-        attributes("Main-Class" to "me.koendev.MainKt")
+        attributes("Main-Class" to "me.koendev.CommitToDBKt")
     }
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
