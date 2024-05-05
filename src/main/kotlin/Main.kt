@@ -1,43 +1,14 @@
 package me.koendev
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.dotenv
-import me.koendev.database.Article
-import me.koendev.database.ArticleService
-import me.koendev.database.Link
-import me.koendev.database.LinkService
 import java.io.File
 import java.io.FileWriter
 
 val dotEnv = dotenv()
-lateinit var articleService: ArticleService
-lateinit var linkService: LinkService
-
-var lastTimeAdded = System.currentTimeMillis()
-var count = 0
-const val numberOfLinks = 8027607
-val startTimeMillis = System.currentTimeMillis()
-
 val txtFile = File("src/main/resources/data.txt")
 val writer = FileWriter(txtFile)
 
 fun main() {
-    // Setting up DataBase
-    val config = HikariConfig()
-    config.jdbcUrl = dotEnv["DB_URL"]
-    config.username = dotEnv["DB_USER"]
-    config.password = dotEnv["DB_PASSWORD"]
-    config.driverClassName = "org.mariadb.jdbc.Driver"
-    config.maximumPoolSize = 10
-    config.connectionTimeout = 30000
-    config.idleTimeout = 600000
-    val datasource = HikariDataSource(config)
-
-
-    articleService = ArticleService(datasource)
-    linkService = LinkService(datasource)
-
     // Going through Wikipedia data
     val f = File(dotEnv["DUMP_FILE"])
     val reader = f.bufferedReader()
@@ -58,7 +29,6 @@ fun main() {
             val links = processLineFromXML(line)
             for (link in links) {
                 writeToFile(title, link)
-                predictETA()
             }
         }
 
@@ -90,31 +60,6 @@ fun processLineFromXML(line: String): List<String> {
     return res.toList()
 }
 
-fun putInDatabase(title: String, link: String) {
-    var articleID = articleService.read(title)
-    if (articleID == null) {
-        articleID = articleService.create(Article(title))
-    }
-
-    var linkID = articleService.read(link)
-    if (linkID == null) {
-        linkID = articleService.create(Article(link))
-    }
-
-    if (linkService.read(articleID, linkID) == null) {
-        linkService.create(Link(articleID, linkID))
-    }
-}
-
 fun writeToFile(title: String, link: String) {
-    writer.write("$title, $link\n")
-}
-
-
-fun predictETA() {
-    val linksToGo = numberOfLinks - ++count
-
-    if(count % 1_000 == 0) {
-        println("processed: $count / $numberOfLinks\truntime: ${System.currentTimeMillis() - startTimeMillis} millis")
-    }
+    writer.write("$title | $link\n")
 }
