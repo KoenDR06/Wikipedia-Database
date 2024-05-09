@@ -20,7 +20,7 @@ class ArticleItem(id: EntityID<Int>): IntEntity(id) {
 
 class ArticleService(datasource: HikariDataSource) {
     object Articles : IntIdTable() {
-        val title = varchar("title", length = 256)
+        val title = varchar("title", length = 512)
     }
 
     init {
