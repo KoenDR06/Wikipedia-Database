@@ -77,7 +77,7 @@ fun processLine(line: String): List<String> {
 
     val splits = line.split("[[")
     for (i in 1..< splits.size) {
-        val link = splits[i].split("]]")[0].split("|")[0].replace(" ", "_")
+        val link = splits[i].split("]]")[0].split("|")[0]
         if (link.startsWith("wikt:") || link.startsWith("File:")) {
             continue
         }
