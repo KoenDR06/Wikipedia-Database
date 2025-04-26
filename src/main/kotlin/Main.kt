@@ -4,7 +4,7 @@ import me.koendev.utils.println
 import java.io.File
 import kotlin.concurrent.thread
 
-val outFile = File("data.txt").bufferedWriter()
+val outFile = File("data.sql").bufferedWriter()
 val inFile = File("simplewiki.xml").bufferedReader()
 val reader = inFile.lineSequence().iterator()
 var count: ULong = 0u
@@ -33,6 +33,7 @@ fun processPage() {
         .replace(Regex("</?title>"), "")
         .trimIndent()
         .replace(",", "|COMMA;|")
+        .replace("'", "''")
     count++
 
     // Wait until we enter text
@@ -59,7 +60,7 @@ fun processPage() {
             if (link.startsWith("wikt:") || link.startsWith("File:")) {
                 continue
             }
-            outFile.append("INSERT INTO Links VALUES ($pageTitle, ${link.replace(",", "|COMMA;|")})\n")
+            outFile.append("INSERT INTO Links VALUES ('$pageTitle', '${link.replace(",", "|COMMA;|").replace("'", "''")}');\n")
         }
         line = reader.next()
         count++
