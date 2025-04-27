@@ -1,6 +1,5 @@
 package me.koendev
 
-import me.koendev.utils.println
 import java.io.File
 import kotlin.concurrent.thread
 
@@ -8,11 +7,15 @@ val outFile = File("data.sql").bufferedWriter()
 val inFile = File("simplewiki.xml").bufferedReader()
 val reader = inFile.lineSequence().iterator()
 var count: ULong = 0u
+var isFirst = true
 
 fun main() {
+    outFile.append("INSERT INTO Links VALUES \n")
+
+    val start = System.currentTimeMillis()
     thread(isDaemon = true) {
         while (true) {
-            String.format("%.4f%%", (count.toDouble() / 23474888 * 100)).println()
+            print(String.format("%.4f%%", (count.toDouble() / 23474888 * 100))+"  ${(System.currentTimeMillis()-start)/1000} seconds\r")
             Thread.sleep(1000)
         }
     }
@@ -60,7 +63,14 @@ fun processPage() {
             if (link.startsWith("wikt:") || link.startsWith("File:")) {
                 continue
             }
-            outFile.append("INSERT INTO Links VALUES ('$pageTitle', '${link.replace(",", "|COMMA;|").replace("'", "''")}');\n")
+            val prefix = if (isFirst) {
+                isFirst = false
+                ""
+            } else {
+                ",\n"
+            }
+
+            outFile.append(prefix + "('$pageTitle', '${link.replace(",", "|COMMA;|").replace("'", "''")}')")
         }
         line = reader.next()
         count++
